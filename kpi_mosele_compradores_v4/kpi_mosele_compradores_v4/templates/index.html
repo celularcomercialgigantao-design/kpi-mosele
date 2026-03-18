@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Painel Gigantão | Metas Compradores</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root{
+      --orange:#F59C00;
+      --orange-dark:#D97D00;
+      --green:#00A651;
+      --green-dark:#00793B;
+      --cream:#FFF8EF;
+      --cream-2:#FFF2DD;
+      --white:#ffffff;
+      --text:#243746;
+      --muted:#67798A;
+      --line:#F1DFC2;
+      --shadow:0 14px 34px rgba(33,55,70,.12);
+      --radius:22px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:linear-gradient(180deg,#fff9f1,#fff3df 40%,#fff7ed);color:var(--text)}
+    .page{max-width:1500px;margin:0 auto;padding:20px}
+    .hero{position:relative;overflow:hidden;background:linear-gradient(120deg,var(--orange),#ffa71a 42%,#ffb83d 100%);border-radius:28px;padding:28px;box-shadow:var(--shadow);color:#fff;margin-bottom:18px}
+    .hero:before{content:"";position:absolute;inset:auto -60px -90px auto;width:300px;height:300px;background:var(--green);transform:rotate(-18deg);border-radius:32px;opacity:.95}
+    .hero:after{content:"";position:absolute;top:-90px;left:-70px;width:260px;height:260px;border:2px solid rgba(255,255,255,.18);border-radius:50%}
+    .hero-grid{position:relative;z-index:1;display:grid;grid-template-columns:1.6fr .9fr;gap:18px;align-items:center}
+    .brand{display:flex;align-items:center;gap:16px;margin-bottom:12px}
+    .brand img{width:120px;height:120px;object-fit:contain;background:rgba(255,255,255,.14);padding:10px;border-radius:24px;backdrop-filter:blur(4px)}
+    .brand-name{font-size:15px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;opacity:.95}
+    .hero h1{margin:0;font-size:46px;line-height:1.02}
+    .hero p{margin:12px 0 0;font-size:17px;line-height:1.5;max-width:900px;color:rgba(255,255,255,.95)}
+    .hero-badges{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+    .pill{padding:12px 16px;border-radius:999px;background:rgba(255,255,255,.15);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.2);font-size:14px}
+    .pill strong{font-size:15px}
+    .hero-side{position:relative;z-index:1;display:grid;gap:12px;justify-items:end}
+    .score-box{width:min(100%,320px);background:rgba(255,255,255,.14);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.18);border-radius:24px;padding:18px}
+    .score-box .small{font-size:13px;opacity:.92;text-transform:uppercase;letter-spacing:.08em}
+    .score-box .big{font-size:40px;font-weight:900;margin:6px 0}
+    .score-parts{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}
+    .score-parts div{background:rgba(255,255,255,.1);padding:10px;border-radius:16px;font-size:13px}
+    .panel{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .controls{padding:18px 18px 14px;margin-bottom:18px}
+    .controls-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:14px;align-items:end}
+    .control label{display:block;font-size:13px;color:var(--muted);margin-bottom:8px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+    .control input,.control select{width:100%;height:52px;border-radius:16px;border:1px solid #E9D5B4;background:#fffaf4;color:var(--text);padding:0 15px;font-size:16px;outline:none}
+    .btn{height:52px;border:none;border-radius:16px;padding:0 20px;font-size:16px;font-weight:800;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:10px}
+    .btn-orange{background:linear-gradient(120deg,var(--orange),var(--orange-dark));color:#fff}
+    .btn-green{background:linear-gradient(120deg,var(--green),var(--green-dark));color:#fff}
+    .btn-light{background:#fff7ea;color:var(--text);border:1px solid #efd6aa}
+    .micro-info{margin-top:12px;color:var(--muted);font-size:13px}
+    .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+    .summary-card{padding:18px;background:linear-gradient(180deg,#fff,#fff8ee);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow)}
+    .summary-card .label{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+    .summary-card .value{font-size:34px;font-weight:900;margin-top:6px;color:var(--text)}
+    .tabs{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 18px}
+    .tab-btn{border:none;padding:12px 18px;border-radius:999px;background:#fff;color:var(--text);font-weight:800;cursor:pointer;border:1px solid var(--line);box-shadow:var(--shadow)}
+    .tab-btn.active{background:linear-gradient(120deg,var(--orange),var(--orange-dark));color:#fff;border-color:transparent}
+    .tab-pane{display:none}
+    .tab-pane.active{display:block}
+    .cards{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:18px}
+    .kpi-card{padding:20px;background:linear-gradient(180deg,#fff,#fff6e7);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow)}
+    .kpi-card .label{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+    .kpi-card .value{font-size:30px;font-weight:900;margin:10px 0 8px;color:var(--text)}
+    .kpi-card .sub{font-size:13px;color:var(--muted);line-height:1.45}
+    .grid-2,.grid-2-even,.charts-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-bottom:18px}
+    .section{padding:20px}
+    .section h3{margin:0;font-size:24px}
+    .sec-sub{margin:6px 0 18px;color:var(--muted);font-size:14px}
+    .chart-wrap{height:360px}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:13px 12px;border-bottom:1px solid #f1e4cf;text-align:left;font-size:14px;vertical-align:top}
+    th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;background:#fff9ef;position:sticky;top:0;z-index:1}
+    td strong{font-size:15px}
+    .small-muted{font-size:12px;color:var(--muted)}
+    .status{display:inline-flex;align-items:center;justify-content:center;padding:7px 12px;border-radius:999px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+    .ok{background:rgba(0,166,81,.12);color:#0d8d4d;border:1px solid rgba(0,166,81,.20)}
+    .atencao{background:rgba(245,156,0,.12);color:#bb7700;border:1px solid rgba(245,156,0,.20)}
+    .critico{background:rgba(214,69,69,.12);color:#c43838;border:1px solid rgba(214,69,69,.20)}
+    .sem-meta{background:rgba(103,121,138,.12);color:#566674;border:1px solid rgba(103,121,138,.18)}
+    .diag-list{display:grid;gap:14px}
+    .insights-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:18px 0 20px}
+    .insight-card{padding:18px;border-radius:20px;background:linear-gradient(180deg,#fffdf9,#fff6e9);border:1px solid #f0dfc2;box-shadow:var(--shadow)}
+    .insight-card .tag{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:800;margin-bottom:8px}
+    .insight-card .big{font-size:24px;font-weight:900;color:var(--text);margin-bottom:8px}
+    .insight-card p{margin:0;color:var(--muted);line-height:1.4;font-size:14px}
+    .medal{font-size:20px;margin-right:6px}
+    .diag-item{padding:16px;border-radius:18px;background:#fffaf3;border:1px solid #f0dfc2}
+    .diag-top{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px}
+    .diag-title{font-size:18px;font-weight:900}
+    .diag-meta{font-size:13px;color:var(--muted)}
+    .diag-motivo{font-size:14px;line-height:1.45;color:var(--text);margin-bottom:12px}
+    .diag-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+    .mini{padding:12px;border-radius:16px;background:#fff;border:1px solid #f1e4cf}
+    .mini span{display:block;font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+    .mini strong{font-size:15px}
+    .empty-state,.error-box{padding:26px}
+    .empty-state h3{font-size:34px;margin:0 0 8px}
+    .empty-state p{font-size:18px;line-height:1.5;color:var(--muted)}
+    .code-box{display:inline-block;padding:14px 16px;background:#fff6e7;border:1px solid #efd6aa;border-radius:16px;color:#9a6400;font-family:Consolas,monospace}
+    .error-box{border:1px solid rgba(214,69,69,.25);background:#fff3f3;border-radius:22px;color:#ba3434}
+    @media (max-width:1320px){.controls-grid{grid-template-columns:repeat(3,1fr)}.summary,.cards,.charts-grid,.grid-2,.grid-2-even,.insights-grid{grid-template-columns:repeat(2,1fr)}.hero-grid{grid-template-columns:1fr}.hero-side{justify-items:start}.diag-kpis{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:760px){.page{padding:14px}.brand{align-items:flex-start}.brand img{width:118px;height:118px}.hero h1{font-size:42px}.controls-grid,.summary,.cards,.charts-grid,.grid-2,.grid-2-even,.diag-kpis{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="hero">
+      <div class="hero-grid">
+        <div>
+          <div class="brand">
+            <img src="{{ url_for('static', filename='logo.jpeg') }}" alt="Gigantão Supermercados">
+            <div>
+              <div class="brand-name">Gigantão Supermercados</div>
+              <h1>Painel de Metas dos Compradores</h1>
+            </div>
+          </div>
+          <p>Versão premium do painel com identidade do Gigantão, visual mais executivo, ranking com medalhas, leitura mais clara dos KPIs e exportação em Excel para envio aos compradores.</p>
+          {% if data %}
+          <div class="hero-badges">
+            <div class="pill">Arquivo: <strong>{{ data.arquivo }}</strong></div>
+            <div class="pill">Base {{ data.anos.anterior }} x {{ data.anos.atual }}</div>
+            <div class="pill">Mês: <strong>{{ data.selected.mes or 'Todos' }}</strong></div>
+            <div class="pill">Comprador: <strong>{{ data.selected.comprador or 'Todos' }}</strong></div>
+          </div>
+          {% endif %}
+        </div>
+        {% if data %}
+        <div class="hero-side">
+          <div class="score-box">
+            <div class="small">Score médio do painel</div>
+            <div class="big">{{ data.kpis.score.value }}</div>
+            <div class="small">Pontuação máxima: {{ data.weights.total }} pontos</div>
+            <div class="score-parts">
+              <div><strong>Vendas</strong><br>{{ data.weights.vendas }} pts</div>
+              <div><strong>Compra/Venda</strong><br>{{ data.weights.compra }} pts</div>
+              <div><strong>Margem</strong><br>{{ data.weights.margem }} pts</div>
+              <div><strong>Bonificação</strong><br>{{ data.weights.bonificacao }} pts</div>
+            </div>
+          </div>
+          <div class="pill">Atualizado em <strong>{{ data.atualizado_em }}</strong></div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if no_file %}
+      <section class="panel empty-state">
+        <h3>Nenhum Excel encontrado na pasta <b>dados</b></h3>
+        <p>Coloque sua planilha dentro da pasta <b>dados</b> do sistema. O arquivo deve ter as abas <b>metas comprador</b>, <b>Base ano anterior</b> e <b>Base ano atual</b>.</p>
+        <div class="code-box">python app.py</div>
+      </section>
+    {% elif error %}
+      <section class="error-box">{{ error }}</section>
+    {% else %}
+      <form class="panel controls" method="get">
+        <div class="controls-grid">
+          <div class="control">
+            <label>Filtro comprador</label>
+            <select name="buyer">
+              <option value="">Todos</option>
+              {% for item in data.filters.compradores %}
+              <option value="{{ item }}" {% if data.selected.comprador == item %}selected{% endif %}>{{ item }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="control">
+            <label>Filtro mês</label>
+            <select name="month">
+              <option value="">Todos</option>
+              {% for item in data.filters.meses %}
+              <option value="{{ item }}" {% if data.selected.mes == item %}selected{% endif %}>{{ item }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="control">
+            <label>Peso vendas</label>
+            <input value="50 pontos" readonly>
+          </div>
+          <div class="control">
+            <label>Peso compra/venda</label>
+            <input value="20 pontos" readonly>
+          </div>
+          <div class="control">
+            <label>Peso margem</label>
+            <input value="20 pontos" readonly>
+          </div>
+          <div class="control">
+            <label>Peso bonificação</label>
+            <input value="20 pontos" readonly>
+          </div>
+          <div class="control">
+            <button class="btn btn-orange" type="submit">Atualizar painel</button>
+          </div>
+        </div>
+        <div class="hero-badges" style="margin-top:14px">
+          <a class="btn btn-green" href="{{ data.export_link }}">Exportar dashboard em Excel</a>
+          <button class="btn btn-light" type="button" onclick="window.print()">Imprimir / PDF</button>
+        </div>
+        <div class="micro-info">Melhoria aplicada: o ranking agora usa os pesos solicitados, com vendas valendo 50 pontos e compra sobre venda, margem e bonificação valendo 20 pontos cada.</div>
+      </form>
+
+      <section class="summary">
+        <div class="summary-card"><div class="label">Registros analisados</div><div class="value">{{ data.resumo.registros }}</div></div>
+        <div class="summary-card"><div class="label">Categorias</div><div class="value">{{ data.resumo.categorias }}</div></div>
+        <div class="summary-card"><div class="label">Compradores</div><div class="value">{{ data.resumo.compradores }}</div></div>
+        <div class="summary-card"><div class="label">Meses no painel</div><div class="value">{{ data.resumo.meses }}</div></div>
+      </section>
+
+      <section class="insights-grid">
+        {% for item in data.insights %}
+        <div class="insight-card">
+          <div class="tag">{{ item.titulo }}</div>
+          <div class="big">{{ item.valor }}</div>
+          <p>{{ item.texto }}</p>
+        </div>
+        {% endfor %}
+      </section>
+
+      <div class="tabs">
+        <button type="button" class="tab-btn active" data-tab="dashboard">Dashboard</button>
+        <button type="button" class="tab-btn" data-tab="graficos">Gráficos KPI</button>
+        <button type="button" class="tab-btn" data-tab="detalhamento">Detalhamento</button>
+      </div>
+
+      <section class="tab-pane active" data-pane="dashboard">
+        <div class="cards">
+          {% for key, card in data.kpis.items() %}
+          <div class="kpi-card">
+            <div class="label">{{ card.label }}</div>
+            <div class="value">{{ card.value }}</div>
+            <div class="sub">{{ card.sub }}</div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <div class="grid-2">
+          <section class="panel section">
+            <h3>Meta x realizado por comprador</h3>
+            <p class="sec-sub">Comparativo consolidado de vendas no filtro aplicado.</p>
+            <div class="chart-wrap"><canvas id="salesChart"></canvas></div>
+          </section>
+          <section class="panel section">
+            <h3>Composição da pontuação</h3>
+            <p class="sec-sub">Leitura clara do peso de cada meta no score do ranking.</p>
+            <div class="chart-wrap"><canvas id="scoreBreakdownChart"></canvas></div>
+          </section>
+        </div>
+
+        <div class="grid-2-even">
+          <section class="panel section">
+            <h3>Ranking dos compradores</h3>
+            <p class="sec-sub">Score médio considerando vendas 50 e demais metas 20 pontos cada.</p>
+            <div style="overflow:auto;max-height:500px">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Comprador</th>
+                    <th>Score</th>
+                    <th>Pts vendas</th>
+                    <th>Pts compra/venda</th>
+                    <th>Pts margem</th>
+                    <th>Pts bonif.</th>
+                    <th>Venda</th>
+                    <th>Compra/Venda</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in data.ranking %}
+                  <tr>
+                    <td><span class="medal">{{ row.medalha }}</span>{{ row.posicao }}</td>
+                    <td><strong>{{ row.comprador }}</strong><br><span class="small-muted">{{ row.categorias }} categorias</span></td>
+                    <td><strong>{{ row.score }}</strong></td>
+                    <td>{{ row.pontos_vendas }}</td>
+                    <td>{{ row.pontos_compra }}</td>
+                    <td>{{ row.pontos_margem }}</td>
+                    <td>{{ row.pontos_bonus }}</td>
+                    <td>{{ row.vendas }}</td>
+                    <td>{{ row.compra_sobre_venda }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel section">
+            <h3>Diagnóstico executivo</h3>
+            <p class="sec-sub">Os principais pontos para falar rápido com cada comprador.</p>
+            <div class="diag-list">
+              {% for row in data.diagnostics %}
+              <div class="diag-item">
+                <div class="diag-top">
+                  <div>
+                    <div class="diag-title">{{ row.categoria }}</div>
+                    <div class="diag-meta">{{ row.comprador }} • {{ row.mes }}</div>
+                  </div>
+                  <span class="status {% if row.status == 'OK' %}ok{% elif row.status == 'Atenção' %}atencao{% elif row.status == 'Crítico' %}critico{% else %}sem-meta{% endif %}">{{ row.status }}</span>
+                </div>
+                <div class="diag-motivo">{{ row.motivos }}</div>
+                <div class="diag-kpis">
+                  <div class="mini"><span>Vendas</span><strong>{{ row.vendas }}</strong><div class="small-muted">Meta {{ row.meta_vendas }}</div></div>
+                  <div class="mini"><span>Compras</span><strong>{{ row.compras }}</strong><div class="small-muted">Limite {{ row.compra_max }}</div></div>
+                  <div class="mini"><span>Margem</span><strong>{{ row.margem }}</strong><div class="small-muted">Meta {{ row.meta_margem }}</div></div>
+                  <div class="mini"><span>Bonificação</span><strong>{{ row.bonificacao }}</strong><div class="small-muted">Meta {{ row.meta_bonificacao }}</div></div>
+                  <div class="mini"><span>Score</span><strong>{{ row.score }}</strong><div class="small-muted">Máx. 110 pts</div></div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="tab-pane" data-pane="graficos">
+        <div class="charts-grid">
+          <section class="panel section">
+            <h3>Evolução mensal de vendas</h3>
+            <p class="sec-sub">Realizado x meta por mês.</p>
+            <div class="chart-wrap"><canvas id="monthlySalesChart"></canvas></div>
+          </section>
+          <section class="panel section">
+            <h3>Evolução mensal de compra sobre venda</h3>
+            <p class="sec-sub">Percentual real x teto/meta percentual.</p>
+            <div class="chart-wrap"><canvas id="monthlyBuyRatioChart"></canvas></div>
+          </section>
+          <section class="panel section">
+            <h3>Evolução mensal de margem</h3>
+            <p class="sec-sub">Margem realizada x meta de margem.</p>
+            <div class="chart-wrap"><canvas id="monthlyMarginChart"></canvas></div>
+          </section>
+          <section class="panel section">
+            <h3>Evolução mensal de bonificação</h3>
+            <p class="sec-sub">Bonificação realizada x meta de bonificação.</p>
+            <div class="chart-wrap"><canvas id="monthlyBonusChart"></canvas></div>
+          </section>
+          <section class="panel section">
+            <h3>Status geral das categorias</h3>
+            <p class="sec-sub">Visão rápida de OK, Atenção, Crítico e Sem meta.</p>
+            <div class="chart-wrap"><canvas id="statusChart"></canvas></div>
+          </section>
+          <section class="panel section">
+            <h3>Score médio por mês</h3>
+            <p class="sec-sub">Acompanha a evolução da pontuação total.</p>
+            <div class="chart-wrap"><canvas id="monthlyScoreChart"></canvas></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="tab-pane" data-pane="detalhamento">
+        <section class="panel section">
+          <h3>Tabela detalhada por categoria</h3>
+          <p class="sec-sub">Meta e realizado por comprador, categoria e mês, já com pontos por indicador.</p>
+          <div style="overflow:auto;max-height:740px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Comprador</th>
+                  <th>Categoria</th>
+                  <th>Mês</th>
+                  <th>Vendas</th>
+                  <th>Meta vendas</th>
+                  <th>Compras</th>
+                  <th>Compra máx.</th>
+                  <th>Compra/Venda</th>
+                  <th>Meta %</th>
+                  <th>Margem</th>
+                  <th>Meta margem</th>
+                  <th>Bonificação</th>
+                  <th>Meta bonif.</th>
+                  <th>Pts vendas</th>
+                  <th>Pts compra</th>
+                  <th>Pts margem</th>
+                  <th>Pts bonif.</th>
+                  <th>Score</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in data.details %}
+                <tr>
+                  <td>{{ row.comprador }}</td>
+                  <td><strong>{{ row.categoria }}</strong></td>
+                  <td>{{ row.mes }}</td>
+                  <td>{{ row.vendas }}</td>
+                  <td>{{ row.meta_vendas }}</td>
+                  <td>{{ row.compras }}</td>
+                  <td>{{ row.compra_maxima }}</td>
+                  <td>{{ row.compra_sobre_venda }}</td>
+                  <td>{{ row.meta_compra_sobre_venda }}</td>
+                  <td>{{ row.margem }}</td>
+                  <td>{{ row.meta_margem }}</td>
+                  <td>{{ row.bonificacao }}</td>
+                  <td>{{ row.meta_bonificacao }}</td>
+                  <td>{{ row.pts_vendas }}</td>
+                  <td>{{ row.pts_compra }}</td>
+                  <td>{{ row.pts_margem }}</td>
+                  <td>{{ row.pts_bonificacao }}</td>
+                  <td><strong>{{ row.score_total }}</strong></td>
+                  <td><span class="status {% if row.status == 'OK' %}ok{% elif row.status == 'Atenção' %}atencao{% elif row.status == 'Crítico' %}critico{% else %}sem-meta{% endif %}">{{ row.status }}</span></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    {% endif %}
+  </div>
+
+  {% if data %}
+  <script>
+    const charts = {{ data.charts|safe }};
+
+    const commonScales = {
+      x: { ticks: { color: '#67798A' }, grid: { color: 'rgba(36,55,70,.08)' } },
+      y: { ticks: { color: '#67798A' }, grid: { color: 'rgba(36,55,70,.08)' } }
+    };
+
+    function createBarChart(id, labels, datasets, horizontal=false, stacked=false){
+      const ctx = document.getElementById(id);
+      if(!ctx) return;
+      new Chart(ctx, {
+        type: 'bar',
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: horizontal ? 'y' : 'x',
+          plugins: { legend: { labels: { color: '#243746' } } },
+          scales: {
+            x: { ...commonScales.x, stacked },
+            y: { ...commonScales.y, stacked }
+          }
+        }
+      });
+    }
+
+    function createLineChart(id, labels, datasets){
+      const ctx = document.getElementById(id);
+      if(!ctx) return;
+      new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: { legend: { labels: { color: '#243746' } } },
+          scales: commonScales
+        }
+      });
+    }
+
+    createBarChart('salesChart', charts.buyers_compare.labels, [
+      { label: 'Vendas realizadas', data: charts.buyers_compare.realizado, backgroundColor: '#F59C00', borderRadius: 8 },
+      { label: 'Meta de vendas', data: charts.buyers_compare.meta, backgroundColor: '#00A651', borderRadius: 8 }
+    ], true);
+
+    createBarChart('scoreBreakdownChart', charts.score_breakdown.labels, [
+      { label: 'Vendas (50)', data: charts.score_breakdown.vendas, backgroundColor: '#F59C00', borderRadius: 8 },
+      { label: 'Compra/Venda (20)', data: charts.score_breakdown.compra, backgroundColor: '#FFD18A', borderRadius: 8 },
+      { label: 'Margem (20)', data: charts.score_breakdown.margem, backgroundColor: '#00A651', borderRadius: 8 },
+      { label: 'Bonificação (20)', data: charts.score_breakdown.bonus, backgroundColor: '#7ED7A4', borderRadius: 8 }
+    ], true, true);
+
+    createLineChart('monthlySalesChart', charts.monthly_sales.labels, [
+      { label: 'Vendas realizadas', data: charts.monthly_sales.realizado, tension: .28, borderColor: '#F59C00', backgroundColor: '#F59C00' },
+      { label: 'Meta de vendas', data: charts.monthly_sales.meta, tension: .28, borderColor: '#00A651', backgroundColor: '#00A651' }
+    ]);
+
+    createLineChart('monthlyBuyRatioChart', charts.monthly_buy_ratio.labels, [
+      { label: 'Compra/Venda real %', data: charts.monthly_buy_ratio.realizado, tension: .28, borderColor: '#F59C00', backgroundColor: '#F59C00' },
+      { label: 'Meta %', data: charts.monthly_buy_ratio.meta, tension: .28, borderColor: '#00A651', backgroundColor: '#00A651' }
+    ]);
+
+    createLineChart('monthlyMarginChart', charts.monthly_margin.labels, [
+      { label: 'Margem realizada', data: charts.monthly_margin.realizado, tension: .28, borderColor: '#F59C00', backgroundColor: '#F59C00' },
+      { label: 'Meta margem', data: charts.monthly_margin.meta, tension: .28, borderColor: '#00A651', backgroundColor: '#00A651' }
+    ]);
+
+    createLineChart('monthlyBonusChart', charts.monthly_bonus.labels, [
+      { label: 'Bonificação realizada', data: charts.monthly_bonus.realizado, tension: .28, borderColor: '#F59C00', backgroundColor: '#F59C00' },
+      { label: 'Meta bonificação', data: charts.monthly_bonus.meta, tension: .28, borderColor: '#00A651', backgroundColor: '#00A651' }
+    ]);
+
+    createBarChart('statusChart', charts.status_counts.labels, [
+      { label: 'Categorias', data: charts.status_counts.values, backgroundColor: ['#00A651', '#F59C00', '#D64545', '#9AA8B3'], borderRadius: 8 }
+    ]);
+
+    createLineChart('monthlyScoreChart', charts.monthly_score.labels, [
+      { label: 'Score médio', data: charts.monthly_score.score, tension: .28, borderColor: '#F59C00', backgroundColor: '#F59C00' }
+    ]);
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelector(`.tab-pane[data-pane="${btn.dataset.tab}"]`).classList.add('active');
+      });
+    });
+  </script>
+  {% endif %}
+</body>
+</html>
